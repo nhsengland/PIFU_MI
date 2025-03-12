@@ -3,8 +3,12 @@
 
 ## Setup
 
-Paths to data in the lake are stored in a file called env.py. This file contains a dictionary called env, which contains the following keys:
+Paths to data in the lake are stored in a file called env.py. This file contains a dictionary called env, which contains the following:
 
-pifu_path: Path to the PIFU data in the Data Lake.
+```py
+env = {
+    "pifu_path": "abfss://path/to/the/PIFU/data/in/the/lake.",
+}
+```
 
 The env.py file is gitignored.
