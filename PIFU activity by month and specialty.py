@@ -20,29 +20,47 @@ display(df)
 
 # COMMAND ----------
 
+df_tfc_pifu = (df_raw_pifu
 
+  .where(F.col("EROC_DerMetricReportingName") == "Moved and Discharged") 
+  .where(F.col("EROC_DerMonth") > "2021-03-01")   
+  .groupBy(
+    
+    "RTT_Specialty_code",
+    "RTT_Specialty_Description",
+    "EROC_DerMonth" )  
+  .agg(F.sum("EROC_Value").alias("Moved_or_Discharged") )  
+  .orderBy("EROC_DerMonth", "RTT_Specialty_code") 
+  .select("EROC_DerMonth", "RTT_Specialty_code", "RTT_Specialty_Description", "Moved_or_Discharged"   )  
+)
+
+display(df_tfc_pifu)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC  
-# MAGIC SELECT 
-# MAGIC        `EROC_DerMonth`
-# MAGIC 	  ,`RTT_Specialty_Code`
-# MAGIC       ,`RTT_Specialty_Description`
-# MAGIC        
-# MAGIC 	 --,`EROC_DerProviderAcuteStatus`
-# MAGIC 	 --`EROC_DerRegionCode`
-# MAGIC      --,`EROC_DerRegionName`
-# MAGIC      --,`EROC_DerICBCode`
-# MAGIC 	 -- ,`EROC_DerICBName`
-# MAGIC       ,sum(`EROC_Value`) as `Moved_or_Discharged` 
-# MAGIC   FROM `global_temp`.`RawPIFU`
-# MAGIC   where `EROC_DerMetricReportingName` = 'Moved and Discharged'
-# MAGIC   and   `EROC_DerMonth` >'2021-03-01'
-# MAGIC   --For ICB/Region filters, remove the filter for 'Acute' providers, and include the relevant ICB/Region fields for aggregation. 
-# MAGIC   group by 
-# MAGIC        `RTT_Specialty_Code`
-# MAGIC       ,`RTT_Specialty_Description`
-# MAGIC       ,`EROC_DerMonth`  
-# MAGIC 	 order by `EROC_DerMonth`
+
+ 
+df_original=spark.sql("""SELECT 
+       `EROC_DerMonth`
+	  ,`RTT_Specialty_Code`
+      ,`RTT_Specialty_Description`
+       
+	 --,`EROC_DerProviderAcuteStatus`
+	 --`EROC_DerRegionCode`
+     --,`EROC_DerRegionName`
+     --,`EROC_DerICBCode`
+	 -- ,`EROC_DerICBName`
+      ,sum(`EROC_Value`) as `Moved_or_Discharged` 
+  FROM `global_temp`.`RawPIFU`
+  where `EROC_DerMetricReportingName` = 'Moved and Discharged'
+  and   `EROC_DerMonth` >'2021-03-01'
+  --For ICB/Region filters, remove the filter for 'Acute' providers, and include the relevant ICB/Region fields for aggregation. 
+  group by 
+       `RTT_Specialty_Code`
+      ,`RTT_Specialty_Description`
+      ,`EROC_DerMonth`  
+	 order by `EROC_DerMonth`, RTT_Specialty_Code""")
+
+# COMMAND ----------
+
+utils.assert_spark_frame_equal(df_tfc_pifu, df_original)
