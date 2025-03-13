@@ -1,3 +1,5 @@
+from pyspark.sql import DataFrame
+
 def assert_spark_frame_equal(left: DataFrame, right: DataFrame):
     """
     Test function to compare two pyspark dataframes rowwise and check if they are identical. 
