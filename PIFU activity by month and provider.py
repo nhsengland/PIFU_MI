@@ -1,19 +1,13 @@
 # Databricks notebook source
-# Data connection settings
-# Blob storage container
-#DFS URL
-#Set connection settings for PIFU data
-reportingLake=""
-reportingContainer=""
-PIFUPath=""
-PIFUPath="abfss://"+reportingContainer+"@"+reportingLake+PIFUPath
+from env import env
+
+# COMMAND ----------
 
 #Load PIFU data
-raw_PIFU = spark.read.option("header","true").option("recursiveFileLookup","true").parquet(PIFUPath)
+raw_PIFU = spark.read.option("header","true").option("recursiveFileLookup","true").parquet(env["pifu_path"])
 #Temp view holding PIFU table data
-raw_PIFU.createOrReplaceGlobalTempView ("RawPIFU")
+raw_PIFU.createOrReplaceGlobalTempView("RawPIFU")
 
-;
 
 query = """
 select * from global_temp.RawPIFU
