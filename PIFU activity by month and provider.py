@@ -20,48 +20,6 @@ display(df)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SHOW TABLES IN global_temp;
-
-# COMMAND ----------
-
-
-original_query = """ 
-SELECT 
-       `EROC_DerMonth`
-	  ,`EROC_DerProviderCode`
-      ,`EROC_DerProviderName`
-      ,`EROC_DerRegionName`
-      ,`EROC_DerRegionCode`
-      ,`EROC_DerICBCode`
-      ,`EROC_DerICBName`
-      ,`EROC_DerProviderAcuteStatus`
-       
-	 --,`EROC_DerProviderAcuteStatus`
-	 --`EROC_DerRegionCode`
-     --,`EROC_DerRegionName`
-     --,`EROC_DerICBCode`
-	 -- ,`EROC_DerICBName`
-      ,sum(`EROC_Value`) as `Moved_or_Discharged` 
-  FROM `global_temp`.`RawPIFU`
-  where `EROC_DerMetricReportingName` = 'Moved and Discharged'
-  and   `EROC_DerMonth` >'2021-03-01'
-  --For ICB/Region filters, remove the filter for 'Acute' providers, and include the relevant ICB/Region fields for aggregation. 
-  group by 
-       `EROC_DerProviderCode`
-      ,`EROC_DerProviderName`
-      ,`EROC_DerMonth`
-      ,`EROC_DerRegionName`
-      ,`EROC_DerRegionCode`
-      ,`EROC_DerICBCode`
-      ,`EROC_DerICBName`
-      ,`EROC_DerProviderAcuteStatus` 
-	 order by EROC_DerMonth, EROC_DerProviderCode
-"""
-df_original = spark.sql(original_query)
-
-# COMMAND ----------
-
 df_processed_pifu = (df_raw_pifu
     .where ( F.col("EROC_DerMetricReportingName") == "Moved and Discharged")
     .where ( F.col("EROC_DerMonth") > '2021-03-01')
@@ -82,28 +40,7 @@ df_processed_pifu = (df_raw_pifu
     )
 )
        
-# 	 --,`EROC_DerProviderAcuteStatus`
-# 	 --`EROC_DerRegionCode`
-#      --,`EROC_DerRegionName`
-#      --,`EROC_DerICBCode`
-# 	 -- ,`EROC_DerICBName`
-#       ,sum(`EROC_Value`) as `Moved_or_Discharged` 
-#   FROM `global_temp`.`RawPIFU`
-#   where `EROC_DerMetricReportingName` = 'Moved and Discharged'
-#   and   `EROC_DerMonth` >'2021-03-01'
+
 #   --For ICB/Region filters, remove the filter for 'Acute' providers, and include the relevant ICB/Region fields for aggregation. 
-#   group by 
-#        `EROC_DerProviderCode`
-#       ,`EROC_DerProviderName`
-#       ,`EROC_DerMonth`
-#       ,`EROC_DerRegionName`
-#       ,`EROC_DerRegionCode`
-#       ,`EROC_DerICBCode`
-#       ,`EROC_DerICBName`
-#       ,`EROC_DerProviderAcuteStatus` 
-# 	 order by `EROC_DerMonth`
+
 display (df_processed_pifu)
-
-# COMMAND ----------
-
-utils.assert_spark_frame_equal(df_original, df_processed_pifu)
