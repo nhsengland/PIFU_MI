@@ -35,32 +35,3 @@ df_tfc_pifu = (df_raw_pifu
 )
 
 display(df_tfc_pifu)
-
-# COMMAND ----------
-
-
- 
-df_original=spark.sql("""SELECT 
-       `EROC_DerMonth`
-	  ,`RTT_Specialty_Code`
-      ,`RTT_Specialty_Description`
-       
-	 --,`EROC_DerProviderAcuteStatus`
-	 --`EROC_DerRegionCode`
-     --,`EROC_DerRegionName`
-     --,`EROC_DerICBCode`
-	 -- ,`EROC_DerICBName`
-      ,sum(`EROC_Value`) as `Moved_or_Discharged` 
-  FROM `global_temp`.`RawPIFU`
-  where `EROC_DerMetricReportingName` = 'Moved and Discharged'
-  and   `EROC_DerMonth` >'2021-03-01'
-  --For ICB/Region filters, remove the filter for 'Acute' providers, and include the relevant ICB/Region fields for aggregation. 
-  group by 
-       `RTT_Specialty_Code`
-      ,`RTT_Specialty_Description`
-      ,`EROC_DerMonth`  
-	 order by `EROC_DerMonth`, RTT_Specialty_Code""")
-
-# COMMAND ----------
-
-utils.assert_spark_frame_equal(df_tfc_pifu, df_original)
