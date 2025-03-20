@@ -44,3 +44,26 @@ df_processed_pifu = (df_raw_pifu
 #   --For ICB/Region filters, remove the filter for 'Acute' providers, and include the relevant ICB/Region fields for aggregation. 
 
 display (df_processed_pifu)
+
+# COMMAND ----------
+
+df_provider_pivot = (df_processed_pifu
+    .groupby(
+        "EROC_DerRegionCode",
+        "EROC_DerRegionName",
+        "EROC_DerICBCode",
+        "EROC_DerICBName",
+        "EROC_DerProviderCode",
+        "EROC_DerProviderName",
+        "EROC_DerProviderAcuteStatus",
+    )
+    .pivot("EROC_DerMonth")
+    .agg(F.sum("Moved_or_Discharged"))
+    .orderBy(
+        "EROC_DerRegionName",
+        "EROC_DerICBCode",
+        "EROC_DerProviderCode"
+        )
+)
+
+display(df_provider_pivot)
