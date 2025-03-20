@@ -1,6 +1,9 @@
 # Databricks notebook source
 from env import env
-from src import utils
+from src import utils, excel
+
+import openpyxl
+import pandas as pd
 
 from pyspark.sql import functions as F
 
@@ -45,3 +48,23 @@ df_tfc_pivot = (df_tfc_pifu
 .orderBy("RTT_Specialty_code")
 )
 display(df_tfc_pivot)
+
+# COMMAND ----------
+
+df_tfc_pivot = df_tfc_pivot.toPandas()
+
+# COMMAND ----------
+
+wb = openpyxl.load_workbook('report_template.xlsx')
+ws_speciality = wb['PIFU | England & Specialty']
+
+excel.insert_pandas_df_into_excel(
+    df = df_tfc_pivot,
+    ws = ws_speciality,
+    header = True,
+    startrow = 11,
+    startcol = 2,
+    index = False,
+)
+
+wb.save('outputs/PIFU_MI.xlsx')
