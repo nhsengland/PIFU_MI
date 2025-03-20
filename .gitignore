@@ -12,7 +12,7 @@
 *.xls
 
 # Exceptions- use ! to include files that would otherwise be ignored
-!publication_template.xlsx
+!report_template.xlsx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
