@@ -35,3 +35,13 @@ df_tfc_pifu = (df_raw_pifu
 )
 
 display(df_tfc_pifu)
+
+# COMMAND ----------
+
+df_tfc_pivot = (df_tfc_pifu
+                .groupBy("RTT_Specialty_code", "RTT_Specialty_Description")
+.pivot("EROC_DerMonth")
+.agg(F.sum("Moved_or_Discharged") )
+.orderBy("RTT_Specialty_code")
+)
+display(df_tfc_pivot)
