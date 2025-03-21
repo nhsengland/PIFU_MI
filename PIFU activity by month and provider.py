@@ -11,15 +11,8 @@ from pyspark.sql import functions as F
 
 #Load PIFU data
 df_raw_pifu = spark.read.option("header","true").option("recursiveFileLookup","true").parquet(env["pifu_path"])
-#Temp view holding PIFU table data
-df_raw_pifu.createOrReplaceGlobalTempView("RawPIFU")
 
-
-query = """
-select * from global_temp.RawPIFU
-"""
-df = spark.sql(query)
-display(df)
+display(df_raw_pifu)
 
 # COMMAND ----------
 
