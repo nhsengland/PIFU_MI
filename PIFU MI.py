@@ -12,7 +12,13 @@ from pyspark.sql import functions as F
 #Load PIFU data
 df_raw_pifu = spark.read.option("header","true").option("recursiveFileLookup","true").parquet(env["pifu_path"])
 wb = openpyxl.load_workbook('report_template.xlsx')
-display(df_raw_pifu)
+report_start = 'August 2021 to '
+
+#display (df_raw_pifu)
+
+publishing_month = df_raw_pifu.select(F.max("EROC_DerMonth")).collect()[0][0]
+display(publishing_month)
+print(report_start + publishing_month)
 
 # COMMAND ----------
 
