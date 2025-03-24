@@ -69,6 +69,28 @@ excel.insert_pandas_df_into_excel(
 
 # COMMAND ----------
 
+number_of_months = df_tfc_pifu.select(F.countDistinct("EROC_DerMonth")).collect()[0][0]
+new_months = number_of_months - 38
+pre_date_columns = 3
+copy_column = 38 + pre_date_columns
+end_column = number_of_months + pre_date_columns + 1
+
+# COMMAND ----------
+
+print(number_of_months)
+
+# COMMAND ----------
+
+for column_number in range(copy_column  , end_column):
+    for row_number in range(11, 37):
+        cell_to_copy_from = ws_speciality.cell(row=row_number, column=copy_column)
+        cell_to_copy_to = ws_speciality.cell(row=row_number, column=column_number)
+        excel.copy_all_cell_styles(cell_to_copy_from, cell_to_copy_to)
+
+wb.save('outputs/formatted_report.xlsx')
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC #month and org
 
