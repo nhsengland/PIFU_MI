@@ -167,6 +167,18 @@ excel.insert_pandas_df_into_excel(
     index = False,
 )
 
+number_of_months = df_processed_pifu.select("EROC_DerMonth").distinct().count()
+new_months = number_of_months - 42
+pre_date_collumns = 8 
+copy_collumn = 42 + pre_date_collumns
+end_collumn = number_of_months + pre_date_collumns + 1
+
+for column_number in range (copy_collumn, end_collumn):
+    for row_number in range(11,154):
+        cell_to_copy_from = ws_provider.cell(row=row_number, column=copy_collumn)
+        cell_to_paste_to = ws_provider.cell(row=row_number, column=column_number)
+        excel.copy_all_cell_styles(cell_to_copy_from, cell_to_paste_to)
+
 
 
 # COMMAND ----------
