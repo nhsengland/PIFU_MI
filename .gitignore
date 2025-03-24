@@ -13,6 +13,7 @@
 
 # Exceptions- use ! to include files that would otherwise be ignored
 !report_template.xlsx
+!practice_template.xlsx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
