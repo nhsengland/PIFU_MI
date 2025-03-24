@@ -6,13 +6,14 @@
 #####################################################################
 # Avoid committing any data. If you need to make an exception for one file you can do that separately
 *.csv
-*.ipynb
+# *.ipynb
 *.ipynb_checkpoints
 *.xlsx
 *.xls
 
 # Exceptions- use ! to include files that would otherwise be ignored
 !report_template.xlsx
+!practice_template.xlsx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
