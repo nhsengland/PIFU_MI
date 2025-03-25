@@ -162,6 +162,18 @@ display(df_provider_pivot)
 
 # COMMAND ----------
 
+#formatting date headers along the pivot
+new_columns = df_provider_pivot.columns[0:7]
+for column in df_provider_pivot.columns[7:]:
+    month_format = datetime.strptime(column, '%Y-%m-%d')
+    month_format = month_format.strftime("%b-%Y")
+    df_provider_pivot = df_provider_pivot.withColumnRenamed(column, month_format)
+    new_columns.append(month_format)
+print(new_columns)
+
+
+# COMMAND ----------
+
 #converting the pivot to pandas databframe
 
 df_pd_provider_pivot = df_provider_pivot.toPandas()
@@ -194,6 +206,9 @@ for column_number in range (copy_column, end_column):
         cell_to_copy_from = ws_provider.cell(row=row_number, column=copy_column)
         cell_to_paste_to = ws_provider.cell(row=row_number, column=column_number)
         excel.copy_all_cell_styles(cell_to_copy_from, cell_to_paste_to)
+
+#updating publishing date header
+ws_provider.cell(row=3, column=3).value = date_header
 
 
 # COMMAND ----------
