@@ -6,6 +6,7 @@ import openpyxl
 import pandas as pd
 
 from pyspark.sql import functions as F
+from datetime import datetime
 
 # COMMAND ----------
 
@@ -17,8 +18,9 @@ report_start = 'August 2021 to '
 #display (df_raw_pifu)
 
 publishing_month = df_raw_pifu.select(F.max("EROC_DerMonth")).collect()[0][0]
-display(publishing_month)
-print(report_start + publishing_month)
+publishing_month = datetime.strptime(publishing_month, '%Y-%m-%d')
+publishing_month = publishing_month.strftime("%B %Y")
+date_header = (report_start + publishing_month) 
 
 # COMMAND ----------
 
