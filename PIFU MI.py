@@ -59,7 +59,18 @@ display(df_tfc_pivot)
 
 # COMMAND ----------
 
-df_tfc_pivot = df_tfc_pivot.toPandas()
+
+for column in df_tfc_pivot.columns[2:]:
+    month_format = datetime.strptime(column, '%Y-%m-%d')
+    month_format = month_format.strftime("%b-%Y") 
+    df_tfc_pivot = df_tfc_pivot.withColumnRenamed(column, month_format)
+
+
+print(new_columns)
+
+# COMMAND ----------
+
+df_tfc_pivot_pd = df_tfc_pivot.toPandas()
 
 # COMMAND ----------
 
@@ -67,7 +78,7 @@ df_tfc_pivot = df_tfc_pivot.toPandas()
 ws_speciality = wb['PIFU | England & Specialty']
 
 excel.insert_pandas_df_into_excel(
-    df = df_tfc_pivot,
+    df = df_tfc_pivot_pd,
     ws = ws_speciality,
     header = True,
     startrow = 11,
@@ -76,6 +87,10 @@ excel.insert_pandas_df_into_excel(
 )
 
 
+
+# COMMAND ----------
+
+ws_speciality.cell(row=3, column=3).value = date_header
 
 # COMMAND ----------
 
