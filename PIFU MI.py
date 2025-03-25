@@ -6,13 +6,21 @@ import openpyxl
 import pandas as pd
 
 from pyspark.sql import functions as F
+from datetime import datetime
 
 # COMMAND ----------
 
 #Load PIFU data
 df_raw_pifu = spark.read.option("header","true").option("recursiveFileLookup","true").parquet(env["pifu_path"])
 wb = openpyxl.load_workbook('report_template.xlsx')
-display(df_raw_pifu)
+report_start = 'August 2021 to '
+
+#display (df_raw_pifu)
+
+publishing_month = df_raw_pifu.select(F.max("EROC_DerMonth")).collect()[0][0]
+publishing_month = datetime.strptime(publishing_month, '%Y-%m-%d')
+publishing_month = publishing_month.strftime("%B %Y")
+date_header = (report_start + publishing_month) 
 
 # COMMAND ----------
 
@@ -44,12 +52,25 @@ df_tfc_pivot = (df_tfc_pifu
 .pivot("EROC_DerMonth")
 .agg(F.sum("Moved_or_Discharged") )
 .orderBy("RTT_Specialty_code")
+.withColumnRenamed("RTT_Specialty_code", "RTT Specialty Code")
+.withColumnRenamed("RTT_Specialty_Description", "RTT Specialty Description")
 )
 display(df_tfc_pivot)
 
 # COMMAND ----------
 
-df_tfc_pivot = df_tfc_pivot.toPandas()
+
+for column in df_tfc_pivot.columns[2:]:
+    month_format = datetime.strptime(column, '%Y-%m-%d')
+    month_format = month_format.strftime("%b-%Y") 
+    df_tfc_pivot = df_tfc_pivot.withColumnRenamed(column, month_format)
+
+
+print(new_columns)
+
+# COMMAND ----------
+
+df_tfc_pivot_pd = df_tfc_pivot.toPandas()
 
 # COMMAND ----------
 
@@ -57,7 +78,7 @@ df_tfc_pivot = df_tfc_pivot.toPandas()
 ws_speciality = wb['PIFU | England & Specialty']
 
 excel.insert_pandas_df_into_excel(
-    df = df_tfc_pivot,
+    df = df_tfc_pivot_pd,
     ws = ws_speciality,
     header = True,
     startrow = 11,
@@ -66,6 +87,10 @@ excel.insert_pandas_df_into_excel(
 )
 
 
+
+# COMMAND ----------
+
+ws_speciality.cell(row=3, column=3).value = date_header
 
 # COMMAND ----------
 
