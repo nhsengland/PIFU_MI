@@ -44,6 +44,8 @@ df_tfc_pivot = (df_tfc_pifu
 .pivot("EROC_DerMonth")
 .agg(F.sum("Moved_or_Discharged") )
 .orderBy("RTT_Specialty_code")
+.withColumnRenamed("RTT_Specialty_code", "RTT Specialty Code")
+.withColumnRenamed("RTT_Specialty_Description", "RTT Specialty Description")
 )
 display(df_tfc_pivot)
 
