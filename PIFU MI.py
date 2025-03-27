@@ -7,6 +7,7 @@ import pandas as pd
 
 from pyspark.sql import functions as F
 from datetime import datetime
+from openpyxl.styles import NamedStyle
 
 # COMMAND ----------
 
@@ -111,7 +112,16 @@ for column_number in range(copy_column  , end_column):
         cell_to_copy_to = ws_speciality.cell(row=row_number, column=column_number)
         excel.copy_all_cell_styles(cell_to_copy_from, cell_to_copy_to)
 
-wb.save('outputs/formatted_report.xlsx')
+
+# COMMAND ----------
+
+# Define the number format style
+number_style = NamedStyle(name="number", number_format="0")
+
+# Apply the number format to the specified range
+for row in ws_speciality.iter_rows(min_row=12, max_row=36, min_col=pre_date_columns + 1, max_col=end_column):
+    for cell in row:
+        cell.number_format = number_style.number_format
 
 # COMMAND ----------
 
