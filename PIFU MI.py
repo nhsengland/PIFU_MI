@@ -66,7 +66,6 @@ for column in df_tfc_pivot.columns[2:]:
     df_tfc_pivot = df_tfc_pivot.withColumnRenamed(column, month_format)
 
 
-print(new_columns)
 
 # COMMAND ----------
 
@@ -227,6 +226,18 @@ for column_number in range (copy_column, end_column):
 #updating publishing date header
 ws_provider.cell(row=3, column=3).value = date_header
 
+
+# COMMAND ----------
+
+from openpyxl.styles import NamedStyle
+
+# Define the number format style
+number_style = NamedStyle(name="number", number_format="0")
+
+# Apply the number format to the specified range
+for row in ws_provider.iter_rows(min_row=12, max_row=153, min_col=pre_date_columns + 1, max_col=end_column):
+    for cell in row:
+        cell.number_format = number_style.number_format
 
 # COMMAND ----------
 
