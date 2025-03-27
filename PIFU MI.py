@@ -7,6 +7,7 @@ import pandas as pd
 
 from pyspark.sql import functions as F
 from datetime import datetime
+from openpyxl.styles import NamedStyle
 
 # COMMAND ----------
 
@@ -40,7 +41,8 @@ df_tfc_pifu = (df_raw_pifu
     "EROC_DerMonth" )  
   .agg(F.sum("EROC_Value").alias("Moved_or_Discharged") )  
   .orderBy("EROC_DerMonth", "RTT_Specialty_code") 
-  .select("EROC_DerMonth", "RTT_Specialty_code", "RTT_Specialty_Description", "Moved_or_Discharged"   )  
+  .select("EROC_DerMonth", "RTT_Specialty_code", "RTT_Specialty_Description", "Moved_or_Discharged") 
+  .withColumn("RTT_Specialty_Description", F.regexp_replace("RTT_Specialty_Description","–", "-")) 
 )
 
 display(df_tfc_pifu)
@@ -59,6 +61,20 @@ display(df_tfc_pivot)
 
 # COMMAND ----------
 
+#creating enland totals
+df_England_pivot = (df_tfc_pifu
+                .groupBy()
+.pivot("EROC_DerMonth")
+.agg(F.sum("Moved_or_Discharged") )
+)
+
+#inserting into pandas
+df_England_pivot_pd = df_England_pivot.toPandas()
+
+display(df_England_pivot)
+
+# COMMAND ----------
+
 
 for column in df_tfc_pivot.columns[2:]:
     month_format = datetime.strptime(column, '%Y-%m-%d')
@@ -66,7 +82,6 @@ for column in df_tfc_pivot.columns[2:]:
     df_tfc_pivot = df_tfc_pivot.withColumnRenamed(column, month_format)
 
 
-print(new_columns)
 
 # COMMAND ----------
 
@@ -75,6 +90,7 @@ df_tfc_pivot_pd = df_tfc_pivot.toPandas()
 # COMMAND ----------
 
 
+#inserting pandas dataframe into excel sheet 
 ws_speciality = wb['PIFU | England & Specialty']
 
 excel.insert_pandas_df_into_excel(
@@ -86,10 +102,21 @@ excel.insert_pandas_df_into_excel(
     index = False,
 )
 
+#instering england totals 
+
+excel.insert_pandas_df_into_excel(
+    df= df_England_pivot_pd,
+    ws = ws_speciality,
+    header = False,
+    startrow = 36,
+    startcol = 4,
+    index = False,
+)
 
 
 # COMMAND ----------
 
+#adding date header (in description)
 ws_speciality.cell(row=3, column=3).value = date_header
 
 # COMMAND ----------
@@ -112,7 +139,16 @@ for column_number in range(copy_column  , end_column):
         cell_to_copy_to = ws_speciality.cell(row=row_number, column=column_number)
         excel.copy_all_cell_styles(cell_to_copy_from, cell_to_copy_to)
 
-wb.save('outputs/formatted_report.xlsx')
+
+# COMMAND ----------
+
+# Define the number format style
+number_style = NamedStyle(name="number", number_format="0")
+
+# Apply the number format to the specified range
+for row in ws_speciality.iter_rows(min_row=12, max_row=36, min_col=pre_date_columns + 1, max_col=end_column):
+    for cell in row:
+        cell.number_format = number_style.number_format
 
 # COMMAND ----------
 
@@ -227,6 +263,58 @@ for column_number in range (copy_column, end_column):
 #updating publishing date header
 ws_provider.cell(row=3, column=3).value = date_header
 
+
+# COMMAND ----------
+
+from openpyxl.styles import NamedStyle
+
+# Define the number format style
+number_style = NamedStyle(name="number", number_format="0")
+
+# Apply the number format to the specified range
+for row in ws_provider.iter_rows(min_row=12, max_row=153, min_col=pre_date_columns + 1, max_col=end_column):
+    for cell in row:
+        cell.number_format = number_style.number_format
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #csv files
+# MAGIC
+
+# COMMAND ----------
+
+#Month provider CSV
+df_month_provider_csv = (df_processed_pifu
+    .select (
+        "EROC_DerProviderCode", 
+        "EROC_DerProviderName", 
+        "EROC_DerRegionName", 
+        "EROC_DerRegionCode", 
+        "EROC_DerICBCode", 
+        "EROC_DerICBName", 
+        "EROC_DerProviderAcuteStatus",
+        "EROC_DerMonth", 
+        "Moved_or_Discharged")
+)
+
+df_month_provider_csv_pd = df_month_provider_csv.toPandas()
+
+#specialty csv
+
+df_specialty_csv = (df_tfc_pifu
+    .select (
+    "RTT_Specialty_code",
+    "RTT_Specialty_Description",
+    "EROC_DerMonth",
+    "Moved_or_Discharged")
+)
+
+df_specialty_csv_pd = df_specialty_csv.toPandas()
+
+#save
+df_month_provider_csv_pd.to_csv('outputs/PIFU_MI_Month_Provider.csv', index=False)
+df_specialty_csv_pd.to_csv('outputs/PIFU_MI_Specialty.csv', index=False)
 
 # COMMAND ----------
 
