@@ -60,6 +60,20 @@ display(df_tfc_pivot)
 
 # COMMAND ----------
 
+#creating enland totals
+df_England_pivot = (df_tfc_pifu
+                .groupBy()
+.pivot("EROC_DerMonth")
+.agg(F.sum("Moved_or_Discharged") )
+)
+
+#inserting into pandas
+df_England_pivot_pd = df_England_pivot.toPandas()
+
+display(df_England_pivot)
+
+# COMMAND ----------
+
 
 for column in df_tfc_pivot.columns[2:]:
     month_format = datetime.strptime(column, '%Y-%m-%d')
@@ -75,6 +89,7 @@ df_tfc_pivot_pd = df_tfc_pivot.toPandas()
 # COMMAND ----------
 
 
+#inserting pandas dataframe into excel sheet 
 ws_speciality = wb['PIFU | England & Specialty']
 
 excel.insert_pandas_df_into_excel(
@@ -86,10 +101,21 @@ excel.insert_pandas_df_into_excel(
     index = False,
 )
 
+#instering england totals 
+
+excel.insert_pandas_df_into_excel(
+    df= df_England_pivot_pd,
+    ws = ws_speciality,
+    header = False,
+    startrow = 36,
+    startcol = 4,
+    index = False,
+)
 
 
 # COMMAND ----------
 
+#adding date header (in description)
 ws_speciality.cell(row=3, column=3).value = date_header
 
 # COMMAND ----------
