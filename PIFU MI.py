@@ -41,7 +41,8 @@ df_tfc_pifu = (df_raw_pifu
     "EROC_DerMonth" )  
   .agg(F.sum("EROC_Value").alias("Moved_or_Discharged") )  
   .orderBy("EROC_DerMonth", "RTT_Specialty_code") 
-  .select("EROC_DerMonth", "RTT_Specialty_code", "RTT_Specialty_Description", "Moved_or_Discharged"   )  
+  .select("EROC_DerMonth", "RTT_Specialty_code", "RTT_Specialty_Description", "Moved_or_Discharged") 
+  .withColumn("RTT_Specialty_Description", F.regexp_replace("RTT_Specialty_Description","–", "-")) 
 )
 
 display(df_tfc_pifu)
@@ -274,6 +275,46 @@ number_style = NamedStyle(name="number", number_format="0")
 for row in ws_provider.iter_rows(min_row=12, max_row=153, min_col=pre_date_columns + 1, max_col=end_column):
     for cell in row:
         cell.number_format = number_style.number_format
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #csv files
+# MAGIC
+
+# COMMAND ----------
+
+#Month provider CSV
+df_month_provider_csv = (df_processed_pifu
+    .select (
+        "EROC_DerProviderCode", 
+        "EROC_DerProviderName", 
+        "EROC_DerRegionName", 
+        "EROC_DerRegionCode", 
+        "EROC_DerICBCode", 
+        "EROC_DerICBName", 
+        "EROC_DerProviderAcuteStatus",
+        "EROC_DerMonth", 
+        "Moved_or_Discharged")
+)
+
+df_month_provider_csv_pd = df_month_provider_csv.toPandas()
+
+#specialty csv
+
+df_specialty_csv = (df_tfc_pifu
+    .select (
+    "RTT_Specialty_code",
+    "RTT_Specialty_Description",
+    "EROC_DerMonth",
+    "Moved_or_Discharged")
+)
+
+df_specialty_csv_pd = df_specialty_csv.toPandas()
+
+#save
+df_month_provider_csv_pd.to_csv('outputs/PIFU_MI_Month_Provider.csv', index=False)
+df_specialty_csv_pd.to_csv('outputs/PIFU_MI_Specialty.csv', index=False)
 
 # COMMAND ----------
 
