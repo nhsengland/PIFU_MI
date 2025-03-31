@@ -30,6 +30,7 @@ date_header = (report_start + publishing_month)
 
 # COMMAND ----------
 
+#creating the specialty sheet data frame
 df_tfc_pifu = (df_raw_pifu
 
   .where(F.col("EROC_DerMetricReportingName") == "Moved and Discharged") 
@@ -49,6 +50,7 @@ display(df_tfc_pifu)
 
 # COMMAND ----------
 
+#pivoting the specialty sheet data frame
 df_tfc_pivot = (df_tfc_pifu
                 .groupBy("RTT_Specialty_code", "RTT_Specialty_Description")
 .pivot("EROC_DerMonth")
@@ -61,7 +63,8 @@ display(df_tfc_pivot)
 
 # COMMAND ----------
 
-#creating enland totals
+#creating enland totals 
+#pivot must come straight after groupby
 df_England_pivot = (df_tfc_pifu
                 .groupBy()
 .pivot("EROC_DerMonth")
@@ -69,6 +72,7 @@ df_England_pivot = (df_tfc_pifu
 )
 
 #inserting into pandas
+#only use toPandas on final data frame
 df_England_pivot_pd = df_England_pivot.toPandas()
 
 display(df_England_pivot)
@@ -76,6 +80,7 @@ display(df_England_pivot)
 # COMMAND ----------
 
 
+#creating a loop to copy date format across to new and existing data columns
 for column in df_tfc_pivot.columns[2:]:
     month_format = datetime.strptime(column, '%Y-%m-%d')
     month_format = month_format.strftime("%b-%Y") 
@@ -85,6 +90,7 @@ for column in df_tfc_pivot.columns[2:]:
 
 # COMMAND ----------
 
+#converting the moved and discharged data inot pandas 
 df_tfc_pivot_pd = df_tfc_pivot.toPandas()
 
 # COMMAND ----------
@@ -121,6 +127,7 @@ ws_speciality.cell(row=3, column=3).value = date_header
 
 # COMMAND ----------
 
+#defining boundaries of cells being copied 
 number_of_months = df_tfc_pifu.select(F.countDistinct("EROC_DerMonth")).collect()[0][0]
 new_months = number_of_months - 38
 pre_date_columns = 3
@@ -133,6 +140,7 @@ print(number_of_months)
 
 # COMMAND ----------
 
+#copying styles from template to new data
 for column_number in range(copy_column  , end_column):
     for row_number in range(11, 37):
         cell_to_copy_from = ws_speciality.cell(row=row_number, column=copy_column)
@@ -216,13 +224,11 @@ display(df_provider_pivot)
 # COMMAND ----------
 
 #formatting date headers along the pivot
-new_columns = df_provider_pivot.columns[0:7]
 for column in df_provider_pivot.columns[7:]:
     month_format = datetime.strptime(column, '%Y-%m-%d')
     month_format = month_format.strftime("%b-%Y")
     df_provider_pivot = df_provider_pivot.withColumnRenamed(column, month_format)
-    new_columns.append(month_format)
-print(new_columns)
+print(df_provider_pivot.columns)
 
 
 # COMMAND ----------
@@ -247,7 +253,8 @@ excel.insert_pandas_df_into_excel(
     index = False,
 )
 
-#copying cell values into new columns 
+
+#adding columns to template according to latest data 
 number_of_months = df_processed_pifu.select("EROC_DerMonth").distinct().count()
 new_months = number_of_months - 42
 pre_date_columns = 8 
@@ -259,6 +266,22 @@ for column_number in range (copy_column, end_column):
         cell_to_copy_from = ws_provider.cell(row=row_number, column=copy_column)
         cell_to_paste_to = ws_provider.cell(row=row_number, column=column_number)
         excel.copy_all_cell_styles(cell_to_copy_from, cell_to_paste_to)
+
+#adding rows to template according to latest data 
+number_of_providers = df_processed_pifu.select("EROC_DerProviderName").distinct().count()
+new_provider = number_of_providers - 142
+pre_table_rows = 11 
+copy_row = pre_table_rows + 142
+end_row = copy_row + new_provider + 1
+
+for row_number in range (copy_row, end_row):
+    for column_number in range(2,end_column):
+        cell_to_copy_from = ws_provider.cell(row=copy_row, column=column_number)
+        cell_to_paste_to = ws_provider.cell(row= row_number, column=column_number)
+        excel.copy_all_cell_styles(cell_to_copy_from, cell_to_paste_to)
+        if cell_to_copy_to.value == "":
+            cell_to_paste_to.fill = openpyxl.styles.PatternFill(start_color="FFFFFFFF", end_color="BFBFBFBF", fill_type="solid")
+
 
 #updating publishing date header
 ws_provider.cell(row=3, column=3).value = date_header
