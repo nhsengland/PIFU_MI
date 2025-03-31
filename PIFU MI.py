@@ -66,9 +66,9 @@ display(df_tfc_pivot)
 #creating enland totals 
 #pivot must come straight after groupby
 df_England_pivot = (df_tfc_pifu
-                .groupBy()
-.pivot("EROC_DerMonth")
-.agg(F.sum("Moved_or_Discharged") )
+    .groupBy()
+    .pivot("EROC_DerMonth")
+    .agg(F.sum("Moved_or_Discharged") )
 )
 
 #inserting into pandas
@@ -241,7 +241,6 @@ df_pd_provider_pivot = df_provider_pivot.toPandas()
 
 #creating a workbook
 
-
 ws_provider = wb['PIFU | By Org & Month']
 
 excel.insert_pandas_df_into_excel(
@@ -253,39 +252,51 @@ excel.insert_pandas_df_into_excel(
     index = False,
 )
 
-
-#adding columns to template according to latest data 
+# Check width of table and get column numbers of unfomatted columns 
 number_of_months = df_processed_pifu.select("EROC_DerMonth").distinct().count()
 new_months = number_of_months - 42
 pre_date_columns = 8 
 copy_column = 42 + pre_date_columns
 end_column = number_of_months + pre_date_columns + 1
 
+# copy and paste formatting onto unformatted columns
 for column_number in range (copy_column, end_column):
     for row_number in range(11,154):
         cell_to_copy_from = ws_provider.cell(row=row_number, column=copy_column)
         cell_to_paste_to = ws_provider.cell(row=row_number, column=column_number)
         excel.copy_all_cell_styles(cell_to_copy_from, cell_to_paste_to)
 
-#adding rows to template according to latest data 
+# get height of table and get row numbers of unformatted rows
 number_of_providers = df_processed_pifu.select("EROC_DerProviderName").distinct().count()
 new_provider = number_of_providers - 142
 pre_table_rows = 11 
 copy_row = pre_table_rows + 142
 end_row = copy_row + new_provider + 1
 
+# copy and paste formatting onto unformatted rows
 for row_number in range (copy_row, end_row):
     for column_number in range(2,end_column):
         cell_to_copy_from = ws_provider.cell(row=copy_row, column=column_number)
         cell_to_paste_to = ws_provider.cell(row= row_number, column=column_number)
         excel.copy_all_cell_styles(cell_to_copy_from, cell_to_paste_to)
-        if cell_to_copy_to.value == "":
-            cell_to_paste_to.fill = openpyxl.styles.PatternFill(start_color="FFFFFFFF", end_color="BFBFBFBF", fill_type="solid")
 
+# Use the values calculated above to get the cell range of the whole table
+conditional_formatting_start_cell = "I11"
+conditional_formatting_end_col = openpyxl.utils.cell.get_column_letter(end_column - 1)
+conditional_formatting_end_row = end_row - 1
+conditional_formatting_end_cell = conditional_formatting_end_col + str(conditional_formatting_end_row)
+conditional_formatting_range = f"{conditional_formatting_start_cell}:{conditional_formatting_end_cell}"
+print(conditional_formatting_range)
+
+# Copy the existing conditional formatting rule, but make it cover the whole table using the range created above.
+for rule_name, rule in ws_provider.conditional_formatting._cf_rules.items():
+    ws_provider.conditional_formatting.add(conditional_formatting_range, rule[0])
+
+
+# COMMAND ----------
 
 #updating publishing date header
 ws_provider.cell(row=3, column=3).value = date_header
-
 
 # COMMAND ----------
 
@@ -295,7 +306,7 @@ from openpyxl.styles import NamedStyle
 number_style = NamedStyle(name="number", number_format="0")
 
 # Apply the number format to the specified range
-for row in ws_provider.iter_rows(min_row=12, max_row=153, min_col=pre_date_columns + 1, max_col=end_column):
+for row in ws_provider.iter_rows(min_row=12, max_row=end_row, min_col=pre_date_columns + 1, max_col=end_column):
     for cell in row:
         cell.number_format = number_style.number_format
 
