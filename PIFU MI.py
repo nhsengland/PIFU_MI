@@ -17,12 +17,12 @@ wb = openpyxl.load_workbook('report_template.xlsx')
 report_start = 'August 2021 to '
 
 #display (df_raw_pifu)
+df_raw_pifu.display()
 
 publishing_month = df_raw_pifu.select(F.max("EROC_DerMonth")).collect()[0][0]
 publishing_month = datetime.strptime(publishing_month, '%Y-%m-%d')
 publishing_month = publishing_month.strftime("%B %Y")
 date_header = (report_start + publishing_month) 
-
 
 # COMMAND ----------
 
@@ -98,9 +98,7 @@ df_tfc_pivot_pd = df_tfc_pivot.toPandas()
 
 
 #inserting pandas dataframe into excel sheet 
-#trying to push this to steven's branch
 ws_speciality = wb['PIFU | England & Specialty']
-
 excel.insert_pandas_df_into_excel(
     df = df_tfc_pivot_pd,
     ws = ws_speciality,
@@ -129,8 +127,7 @@ ws_speciality.cell(row=3, column=3).value = date_header
 
 # COMMAND ----------
 
-#defining boundaries of cells being copied
-#these numbers should not need changing these are the fixed peramiters of the existing repert template
+#defining boundaries of cells being copied 
 number_of_months = df_tfc_pifu.select(F.countDistinct("EROC_DerMonth")).collect()[0][0]
 new_months = number_of_months - 38
 pre_date_columns = 3
