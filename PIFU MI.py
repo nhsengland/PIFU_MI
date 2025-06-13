@@ -330,6 +330,15 @@ df_month_provider_csv = (df_processed_pifu
         "EROC_DerProviderAcuteStatus",
         "EROC_DerMonth", 
         "Moved_or_Discharged")
+    .withColumnRenamed("EROC_DerProviderCode", "Provider Code")
+    .withColumnRenamed("EROC_DerProviderName", "Provider Name")
+    .withColumnRenamed("EROC_DerRegionName", "Region Name")
+    .withColumnRenamed("EROC_DerRegionCode", "Region Code")
+    .withColumnRenamed("EROC_DerICBCode", "ICB Code")
+    .withColumnRenamed("EROC_DerICBName", "ICB Name")
+    .withColumnRenamed("EROC_DerProviderAcuteStatus", "Acute Status")
+    .withColumnRenamed("EROC_DerMonth", "Activity Month")
+    .withColumnRenamed("Moved_or_Discharged", "Moved or Discharged")
 )
 
 df_month_provider_csv_pd = df_month_provider_csv.toPandas()
@@ -342,6 +351,10 @@ df_specialty_csv = (df_tfc_pifu
     "RTT_Specialty_Description",
     "EROC_DerMonth",
     "Moved_or_Discharged")
+    .withColumnRenamed("RTT_Specialty_code", "Specialty Code")
+    .withColumnRenamed("RTT_Specialty_Description", "Specialty Description")
+    .withColumnRenamed("EROC_DerMonth", "Activity Month")
+    .withColumnRenamed("Moved_or_Discharged", "Moved or Discharged")
 )
 
 df_specialty_csv_pd = df_specialty_csv.toPandas()
