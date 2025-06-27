@@ -1,4 +1,5 @@
 # Databricks notebook source
+#Importing the tools
 from env import env
 from src import utils, excel
 
@@ -17,7 +18,7 @@ wb = openpyxl.load_workbook('report_template.xlsx')
 report_start = 'August 2021 to '
 
 #display (df_raw_pifu)
-df_raw_pifu.display()
+#df_raw_pifu.display()
 
 publishing_month = df_raw_pifu.select(F.max("EROC_DerMonth")).collect()[0][0]
 publishing_month = datetime.strptime(publishing_month, '%Y-%m-%d')
@@ -47,7 +48,7 @@ df_tfc_pifu = (df_raw_pifu
   .withColumn("RTT_Specialty_Description", F.regexp_replace("RTT_Specialty_Description","–", "-")) 
 )
 
-display(df_tfc_pifu)
+#display(df_tfc_pifu)
 
 # COMMAND ----------
 
@@ -60,7 +61,7 @@ df_tfc_pivot = (df_tfc_pifu
 .withColumnRenamed("RTT_Specialty_code", "RTT Specialty Code")
 .withColumnRenamed("RTT_Specialty_Description", "RTT Specialty Description")
 )
-display(df_tfc_pivot)
+#display(df_tfc_pivot)
 
 # COMMAND ----------
 
@@ -76,7 +77,7 @@ df_England_pivot = (df_tfc_pifu
 #only use toPandas on final data frame
 df_England_pivot_pd = df_England_pivot.toPandas()
 
-display(df_England_pivot)
+##display(df_England_pivot)
 
 # COMMAND ----------
 
@@ -91,7 +92,7 @@ for column in df_tfc_pivot.columns[2:]:
 
 # COMMAND ----------
 
-#converting the moved and discharged data inot pandas 
+#converting the moved and discharged data in to pandas 
 df_tfc_pivot_pd = df_tfc_pivot.toPandas()
 
 # COMMAND ----------
@@ -108,7 +109,7 @@ excel.insert_pandas_df_into_excel(
     index = False,
 )
 
-#instering england totals 
+#inserting england totals 
 
 excel.insert_pandas_df_into_excel(
     df= df_England_pivot_pd,
@@ -136,17 +137,21 @@ end_column = number_of_months + pre_date_columns + 1
 
 # COMMAND ----------
 
-print(number_of_months)
+#print(number_of_months)
 
 # COMMAND ----------
 
 #copying styles from template to new data
-for column_number in range(copy_column  , end_column):
+for column_number in range(copy_column, end_column):
     for row_number in range(11, 37):
         cell_to_copy_from = ws_speciality.cell(row=row_number, column=copy_column)
         cell_to_copy_to = ws_speciality.cell(row=row_number, column=column_number)
         excel.copy_all_cell_styles(cell_to_copy_from, cell_to_copy_to)
 
+# Ensure new columns have consistent width
+template_column_width = ws_speciality.column_dimensions[ws_speciality.cell(row=11, column=copy_column).column_letter].width
+for column_number in range(copy_column, end_column):
+    ws_speciality.column_dimensions[ws_speciality.cell(row=11, column=column_number).column_letter].width = template_column_width
 
 # COMMAND ----------
 
@@ -165,6 +170,7 @@ for row in ws_speciality.iter_rows(min_row=12, max_row=36, min_col=pre_date_colu
 
 # COMMAND ----------
 
+#creating the month & Org sheet data frame
 df_processed_pifu = (df_raw_pifu
     .where ( F.col("EROC_DerMetricReportingName") == "Moved and Discharged")
     .where ( F.col("EROC_DerMonth") > '2021-03-01')
@@ -186,7 +192,7 @@ df_processed_pifu = (df_raw_pifu
 )
        
 
-#   --For ICB/Region filters, remove the filter for 'Acute' providers, and include the relevant ICB/Region fields for aggregation. 
+# For ICB/Region filters, remove the filter for 'Acute' providers, and include the relevant ICB/Region fields for aggregation. 
 
 display (df_processed_pifu)
 
@@ -219,7 +225,7 @@ df_provider_pivot = (df_processed_pifu
     .withColumnRenamed("EROC_DerProviderAcuteStatus", "Acute Status")
 )
 
-display(df_provider_pivot)
+##display(df_provider_pivot)
 
 # COMMAND ----------
 
@@ -228,7 +234,7 @@ for column in df_provider_pivot.columns[7:]:
     month_format = datetime.strptime(column, '%Y-%m-%d')
     month_format = month_format.strftime("%b-%Y")
     df_provider_pivot = df_provider_pivot.withColumnRenamed(column, month_format)
-print(df_provider_pivot.columns)
+#print(df_provider_pivot.columns)
 
 
 # COMMAND ----------
@@ -266,6 +272,10 @@ for column_number in range (copy_column, end_column):
         cell_to_paste_to = ws_provider.cell(row=row_number, column=column_number)
         excel.copy_all_cell_styles(cell_to_copy_from, cell_to_paste_to)
 
+# Set the width of new columns to 10.29
+for column_number in range(9, end_column):
+    ws_provider.column_dimensions[openpyxl.utils.cell.get_column_letter(column_number)].width = 10.29
+
 # get height of table and get row numbers of unformatted rows
 number_of_providers = df_processed_pifu.select("EROC_DerProviderName").distinct().count()
 new_provider = number_of_providers - 142
@@ -291,7 +301,6 @@ print(conditional_formatting_range)
 # Copy the existing conditional formatting rule, but make it cover the whole table using the range created above.
 for rule_name, rule in ws_provider.conditional_formatting._cf_rules.items():
     ws_provider.conditional_formatting.add(conditional_formatting_range, rule[0])
-
 
 # COMMAND ----------
 
@@ -360,8 +369,10 @@ df_specialty_csv = (df_tfc_pifu
 df_specialty_csv_pd = df_specialty_csv.toPandas()
 
 #save
-df_month_provider_csv_pd.to_csv('outputs/PIFU_MI_Month_Provider.csv', index=False)
-df_specialty_csv_pd.to_csv('outputs/PIFU_MI_Specialty.csv', index=False)
+df_month_provider_csv_pd.to_csv('outputs/PIFU Activity by month and provider data extract.csv', index=False)
+
+df_specialty_csv_pd.to_csv('outputs/PIFU Activity by month and specialty data extract.csv', index=False)
+
 
 # COMMAND ----------
 
@@ -371,4 +382,4 @@ df_specialty_csv_pd.to_csv('outputs/PIFU_MI_Specialty.csv', index=False)
 # COMMAND ----------
 
 # Save the workbook with the DataFrame inserted
-wb.save('outputs/PIFU_MI.xlsx')
+wb.save('outputs/PIFU - Activity Time Series by Provider and Specialty.xlsx')
